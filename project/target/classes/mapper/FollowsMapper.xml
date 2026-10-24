@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.Mapper.FollowsMapper">
+
+    <insert id="insert">
+        INSERT INTO follows (follower, followee) VALUES (#{follower}, #{followee})
+    </insert>
+
+    <delete id="delete">
+        DELETE FROM follows WHERE follower = #{follower} AND followee = #{followee}
+    </delete>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(*) FROM follows WHERE follower = #{follower} AND followee = #{followee}
+    </select>
+
+    <select id="findFollowees" resultType="string">
+        SELECT followee FROM follows WHERE follower = #{follower}
+    </select>
+
+    <select id="findFollowers" resultType="string">
+        SELECT follower FROM follows WHERE followee = #{followee}
+    </select>
+
+    <select id="countFollowers" resultType="int">
+        SELECT COUNT(*) FROM follows WHERE followee = #{followee}
+    </select>
+
+    <select id="countFollowees" resultType="int">
+        SELECT COUNT(*) FROM follows WHERE follower = #{follower}
+    </select>
+
+    <select id="findTopAuthors" resultType="java.util.Map">
+        SELECT followee AS username, COUNT(*) AS followerCount
+        FROM follows
+        GROUP BY followee
+        ORDER BY followerCount DESC
+        LIMIT #{limit}
+    </select>
+
+    <delete id="deleteByUser">
+        DELETE FROM follows WHERE follower = #{username} OR followee = #{username}
+    </delete>
+
+    <select id="batchFindFollowed" resultType="string">
+        SELECT followee FROM follows WHERE follower = #{follower} AND followee IN
+        <foreach collection="followees" item="f" open="(" separator="," close=")">#{f}</foreach>
+    </select>
+
+</mapper>

@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.Mapper.NotesMapper">
+
+    <resultMap id="notesMap" type="Notes">
+        <id column="id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="book_name" property="bookName"/>
+        <result column="is_public" property="isPublic"/>
+        <result column="audit_status" property="auditStatus"/>
+        <result column="audit_remark" property="auditRemark"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <sql id="baseColumns">id, username, title, content, book_name, is_public, audit_status, audit_remark, create_time</sql>
+
+    <insert id="insert" parameterType="Notes" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO notes (username, title, content, book_name, is_public, audit_status, audit_remark)
+        VALUES (#{username}, #{title}, #{content}, #{bookName},
+                #{isPublic}, COALESCE(#{auditStatus}, 1), #{auditRemark})
+    </insert>
+
+    <select id="findById" resultMap="notesMap">
+        SELECT <include refid="baseColumns"/> FROM notes WHERE id = #{id}
+    </select>
+
+    <select id="findRandomPublic" resultMap="notesMap">
+        SELECT n.id, n.username, n.title, n.content, n.book_name, n.is_public, n.audit_status, n.audit_remark, n.create_time
+        FROM notes n
+        INNER JOIN (
+            SELECT id FROM notes WHERE is_public = 1 AND audit_status = 2 ORDER BY RAND() LIMIT #{limit}
+        ) t ON t.id = n.id
+        ORDER BY n.create_time DESC
+    </select>
+
+    <select id="findAllByUsername" resultMap="notesMap">
+        SELECT <include refid="baseColumns"/> FROM notes WHERE username = #{username} AND audit_status != 1 ORDER BY create_time DESC
+    </select>
+
+    <select id="findByUsernameAndPublic" resultMap="notesMap">
+        SELECT <include refid="baseColumns"/> FROM notes WHERE username = #{username} AND is_public = #{isPublic} AND audit_status != 1 ORDER BY create_time DESC
+    </select>
+
+    <select id="findByUsernameAndAuditStatus" resultMap="notesMap">
+        SELECT <include refid="baseColumns"/> FROM notes WHERE username = #{username} AND audit_status = #{auditStatus} ORDER BY create_time DESC
+    </select>
+
+    <update id="updateById" parameterType="Notes">
+        UPDATE notes
+        <set>
+            <if test="title != null and title != ''">title = #{title},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="bookName != null">book_name = #{bookName},</if>
+            <if test="isPublic != null">is_public = #{isPublic},</if>
+            <if test="auditStatus != null">audit_status = #{auditStatus},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM notes WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByUsername">
+        DELETE FROM notes WHERE username = #{username}
+    </delete>
+
+    <select id="findIdsByUsername" resultType="long">
+        SELECT id FROM notes WHERE username = #{username}
+    </select>
+
+    <select id="findPendingAudit" resultMap="notesMap">
+        SELECT <include refid="baseColumns"/> FROM notes WHERE audit_status = 1 ORDER BY create_time DESC
+    </select>
+
+    <select id="findAuditPassedPublic" resultMap="notesMap">
+        SELECT <include refid="baseColumns"/> FROM notes WHERE audit_status = 2 ORDER BY create_time DESC
+    </select>
+
+    <select id="findByAuthorAndPublic" resultMap="notesMap">
+        SELECT <include refid="baseColumns"/> FROM notes WHERE username = #{username} AND is_public = 1 AND audit_status = 2 ORDER BY create_time DESC
+    </select>
+
+    <update id="updateAudit">
+        UPDATE notes SET audit_status = #{auditStatus}, audit_remark = #{auditRemark} WHERE id = #{id}
+    </update>
+
+    <select id="findLikedNotesByUser" resultMap="notesMap">
+        SELECT n.id, n.username, n.title, n.content, n.book_name, n.is_public, n.audit_status, n.audit_remark, n.create_time
+        FROM notes n INNER JOIN likes l ON l.note_id = n.id
+        WHERE l.username = #{username} AND n.audit_status = 2
+        ORDER BY l.create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countLikedNotesByUser" resultType="int">
+        SELECT COUNT(*) FROM likes l INNER JOIN notes n ON l.note_id = n.id
+        WHERE l.username = #{username} AND n.audit_status = 2
+    </select>
+
+    <select id="countAuditPassedPublic" resultType="int">
+        SELECT COUNT(*) FROM notes WHERE is_public = 1 AND audit_status = 2
+    </select>
+
+    <select id="countPendingAudit" resultType="int">
+        SELECT COUNT(*) FROM notes WHERE audit_status = 1
+    </select>
+
+    <select id="countPublicByUsername" resultType="int">
+        SELECT COUNT(*) FROM notes WHERE username = #{username} AND is_public = 1 AND audit_status = 2
+    </select>
+
+    <select id="batchCountLikes" resultType="java.util.Map">
+        SELECT note_id AS noteId, COUNT(*) AS likeCount FROM likes
+        WHERE note_id IN
+        <foreach collection="noteIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+        GROUP BY note_id
+    </select>
+
+    <select id="batchCountComments" resultType="java.util.Map">
+        SELECT note_id AS noteId, COUNT(*) AS commentCount FROM comments
+        WHERE note_id IN
+        <foreach collection="noteIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+        GROUP BY note_id
+    </select>
+
+    <select id="batchLikedByUser" resultType="java.util.Map">
+        SELECT note_id AS noteId FROM likes
+        WHERE username = #{username} AND note_id IN
+        <foreach collection="noteIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
+    <select id="findByIds" resultMap="notesMap">
+        SELECT <include refid="baseColumns"/> FROM notes WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
+</mapper>

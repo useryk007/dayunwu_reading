@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.Mapper.UsersMapper">
+
+    <resultMap id="usersMap" type="org.example.Pojo.Users">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="phone" column="phone"/>
+        <result property="password" column="password"/>
+        <result property="passwordPlain" column="password_plain"/>
+        <result property="avatar" column="avatar"/>
+        <result property="grade" column="grade"/>
+        <result property="major" column="major"/>
+        <result property="school" column="school"/>
+        <result property="region" column="region"/>
+        <result property="role" column="role"/>
+        <result property="status" column="status"/>
+        <result property="registerTime" column="register_time"/>
+    </resultMap>
+
+    <sql id="baseColumns">id, username, phone, password, password_plain, avatar, grade, major, school, region, role, status, register_time</sql>
+
+    <sql id="loginColumns">id, username, phone, password, avatar, grade, major, school, region, role, status, register_time</sql>
+
+    <sql id="publicColumns">id, username, avatar, grade, major, school, region, register_time</sql>
+
+    <select id="findById" resultMap="usersMap">
+        SELECT <include refid="baseColumns"/> FROM users WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="org.example.Pojo.Users" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO users (username, phone, password, password_plain, avatar, grade, major, school, region, role, status, register_time)
+        VALUES (#{username}, #{phone}, #{password}, #{passwordPlain}, #{avatar}, #{grade}, #{major}, #{school}, #{region},
+                COALESCE(#{role}, 'USER'), COALESCE(#{status}, 1), #{registerTime})
+    </insert>
+
+    <select id="findByUsername" resultMap="usersMap">
+        SELECT <include refid="baseColumns"/> FROM users WHERE username = #{username}
+    </select>
+
+    <select id="findByPhone" resultMap="usersMap">
+        SELECT <include refid="baseColumns"/> FROM users WHERE phone = #{phone}
+    </select>
+
+    <select id="findByAccount" resultMap="usersMap">
+        SELECT <include refid="loginColumns"/> FROM users WHERE username = #{account} OR phone = #{account} LIMIT 1
+    </select>
+
+    <update id="updateById" parameterType="org.example.Pojo.Users">
+        UPDATE users
+        <set>
+            <if test="username != null">username = #{username},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="password != null">password = #{password},</if>
+            <if test="passwordPlain != null">password_plain = #{passwordPlain},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+            <if test="grade != null">grade = #{grade},</if>
+            <if test="major != null">major = #{major},</if>
+            <if test="school != null">school = #{school},</if>
+            <if test="region != null">region = #{region},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM users WHERE id = #{id}
+    </delete>
+
+    <select id="findAll" resultMap="usersMap">
+        SELECT <include refid="loginColumns"/> FROM users ORDER BY register_time DESC
+    </select>
+
+    <update id="updateStatus">
+        UPDATE users SET status = #{status} WHERE id = #{id}
+    </update>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*) FROM users
+    </select>
+
+</mapper>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.Mapper.LikesMapper">
+
+    <insert id="insert">
+        INSERT INTO likes (note_id, username) VALUES (#{noteId}, #{username})
+    </insert>
+
+    <delete id="delete">
+        DELETE FROM likes WHERE note_id = #{noteId} AND username = #{username}
+    </delete>
+
+    <delete id="deleteByNoteId">
+        DELETE FROM likes WHERE note_id = #{noteId}
+    </delete>
+
+    <delete id="deleteByUsername">
+        DELETE FROM likes WHERE username = #{username}
+    </delete>
+
+    <delete id="deleteByNoteIds">
+        DELETE FROM likes WHERE note_id IN
+        <foreach collection="noteIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="countByNoteId" resultType="int">
+        SELECT COUNT(*) FROM likes WHERE note_id = #{noteId}
+    </select>
+
+    <select id="countByNoteAndUser" resultType="int">
+        SELECT COUNT(*) FROM likes WHERE note_id = #{noteId} AND username = #{username}
+    </select>
+
+    <select id="findTopByLikeCount" resultType="java.util.Map">
+        SELECT n.id AS id, n.title AS title, n.username AS username,
+               n.create_time AS createTime,
+               COUNT(l.id) AS likeCount
+        FROM notes n
+        LEFT JOIN likes l ON l.note_id = n.id
+        WHERE n.is_public = 1 AND n.audit_status = 2
+        GROUP BY n.id
+        ORDER BY likeCount DESC, n.create_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="countTotalByUsername" resultType="int">
+        SELECT COUNT(l.id) FROM likes l
+        INNER JOIN notes n ON l.note_id = n.id
+        WHERE n.username = #{username}
+    </select>
+
+    <select id="findTopUsersByTotalLikes" resultType="java.util.Map">
+        SELECT n.username AS username, COUNT(l.id) AS totalLikes
+        FROM notes n
+        INNER JOIN likes l ON l.note_id = n.id
+        WHERE n.is_public = 1 AND n.audit_status = 2
+        GROUP BY n.username
+        ORDER BY totalLikes DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

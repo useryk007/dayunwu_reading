@@ -1,0 +1,13 @@
+logging:
+  level:
+    org.example: INFO
+    org.mybatis: WARN
+
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 50
+      connection-timeout: 60000
+
+server:
+  forward-headers-strategy: framework

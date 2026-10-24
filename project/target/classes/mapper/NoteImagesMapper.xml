@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.Mapper.NoteImagesMapper">
+
+    <resultMap id="noteImagesMap" type="NoteImages">
+        <id column="id" property="id"/>
+        <result column="note_id" property="noteId"/>
+        <result column="image_url" property="imageUrl"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="NoteImages" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO note_images (note_id, image_url)
+        VALUES (#{noteId}, #{imageUrl})
+    </insert>
+
+    <select id="findByNoteId" resultMap="noteImagesMap">
+        SELECT id, note_id, image_url, create_time FROM note_images WHERE note_id = #{noteId} ORDER BY create_time ASC
+    </select>
+
+    <delete id="deleteByNoteId">
+        DELETE FROM note_images WHERE note_id = #{noteId}
+    </delete>
+
+    <delete id="deleteByNoteIds">
+        DELETE FROM note_images WHERE note_id IN
+        <foreach collection="noteIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>

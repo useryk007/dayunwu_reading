@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.Mapper.CommentsMapper">
+
+    <resultMap id="commentsMap" type="Comments">
+        <id column="id" property="id"/>
+        <result column="note_id" property="noteId"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="username" property="username"/>
+        <result column="content" property="content"/>
+        <result column="image" property="image"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="Comments" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO comments (note_id, parent_id, username, content, image)
+        VALUES (#{noteId}, #{parentId}, #{username}, #{content}, #{image})
+    </insert>
+
+    <select id="findById" resultMap="commentsMap">
+        SELECT id, note_id, parent_id, username, content, image, create_time FROM comments WHERE id = #{id}
+    </select>
+
+    <select id="findByNoteId" resultMap="commentsMap">
+        SELECT id, note_id, parent_id, username, content, image, create_time FROM comments WHERE note_id = #{noteId} ORDER BY create_time ASC
+    </select>
+
+    <select id="countByNoteId" resultType="int">
+        SELECT COUNT(*) FROM comments WHERE note_id = #{noteId}
+    </select>
+
+    <delete id="deleteByNoteId">
+        DELETE FROM comments WHERE note_id = #{noteId}
+    </delete>
+
+    <delete id="deleteByUsername">
+        DELETE FROM comments WHERE username = #{username}
+    </delete>
+
+    <delete id="deleteByNoteIds">
+        DELETE FROM comments WHERE note_id IN
+        <foreach collection="noteIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deleteById">
+        DELETE FROM comments WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByParentId">
+        DELETE FROM comments WHERE parent_id = #{parentId}
+    </delete>
+
+    <select id="findByParentId" resultMap="commentsMap">
+        SELECT id, note_id, parent_id, username, content, image, create_time FROM comments WHERE parent_id = #{parentId}
+    </select>
+
+    <select id="findByUsername" resultMap="commentsMap">
+        SELECT id, note_id, parent_id, username, content, image, create_time FROM comments WHERE username = #{username}
+    </select>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*) FROM comments
+    </select>
+
+</mapper>
